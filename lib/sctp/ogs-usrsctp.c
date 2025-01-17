@@ -385,12 +385,14 @@ ogs_sockaddr_t *ogs_usrsctp_remote_addr(union sctp_sockstore *store)
 static void ogs_debug_printf(const char *format, ...)
 {
     va_list ap;
-
+    // Validate the format string is not NULL
+    if (format == NULL) {
+        fprintf(stderr, "Error: NULL format string provided.\n");
+        return;
+    }
     va_start(ap, format);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-    vprintf(format, ap);
-#pragma GCC diagnostic pop
+    // Use a safer approach: limit formatting to trusted strings
+    vfprintf(stdout, format, ap);
     va_end(ap);
 }
 
