@@ -18,6 +18,8 @@
  */
 
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "ogs-sctp.h"
 
@@ -382,16 +384,32 @@ ogs_sockaddr_t *ogs_usrsctp_remote_addr(union sctp_sockstore *store)
     return addr;
 }
 
+static int is_trusted_format(const char *format) {
+    // Example: check against a whitelist of trusted format strings
+    const char *trusted_formats[] = {
+        "Value: %d\n",
+        "Error: %s\n",
+        "Message: %s\n"
+    };
+    for (size_t i = 0; i < sizeof(trusted_formats) / sizeof(trusted_formats[0]); ++i) {
+        if (strcmp(format, trusted_formats[i]) == 0) {
+            return 1; // Trusted
+        }
+    }
+    return 0; // Untrusted
+}
+
 static void ogs_debug_printf(const char *format, ...)
 {
     va_list ap;
-    // Validate the format string is not NULL
-    if (format == NULL) {
-        fprintf(stderr, "Error: NULL format string provided.\n");
+
+    // Check if the format string is trusted
+    if (!is_trusted_format(format)) {
+        fprintf(stderr, "Error: Untrusted format string.\n");
         return;
     }
+
     va_start(ap, format);
-    // Use a safer approach: limit formatting to trusted strings
     vfprintf(stdout, format, ap);
     va_end(ap);
 }
